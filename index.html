@@ -40,9 +40,7 @@
             margin-bottom: 32px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .form-group { margin-bottom: 20px; }
 
         label {
             display: block;
@@ -52,28 +50,15 @@
             margin-bottom: 8px;
         }
 
-        input[type="text"],
-        input[type="number"],
-        select {
+        input[type="number"], select {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
             font-size: 0.95rem;
-            transition: border-color 0.2s;
             color: #2d3748;
             background: #f7fafc;
-        }
-
-        input[type="password"] {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 0.95rem;
             transition: border-color 0.2s;
-            color: #2d3748;
-            background: #f7fafc;
         }
 
         input:focus, select:focus {
@@ -82,11 +67,7 @@
             background: white;
         }
 
-        .row {
-            display: flex;
-            gap: 12px;
-        }
-
+        .row { display: flex; gap: 12px; }
         .row .form-group { flex: 1; }
 
         .upload-area {
@@ -153,18 +134,7 @@
 
         .result-text strong {
             color: #667eea;
-            font-size: 1.1rem;
-        }
-
-        .error {
-            margin-top: 16px;
-            padding: 12px 16px;
-            background: #fff5f5;
-            border: 1px solid #fc8181;
-            border-radius: 8px;
-            color: #c53030;
-            font-size: 0.9rem;
-            display: none;
+            font-size: 1.2rem;
         }
 
         .spinner {
@@ -180,12 +150,6 @@
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .api-note {
-            font-size: 0.75rem;
-            color: #a0aec0;
-            margin-top: 4px;
-        }
     </style>
 </head>
 <body>
@@ -193,15 +157,15 @@
         <h1>🍚 밥상 수명예측기</h1>
         <p class="subtitle">오늘 드신 밥상 사진을 올리면<br>몇 살까지 살지 알려드립니다</p>
 
-        <form id="mainForm" enctype="multipart/form-data">
+        <form id="mainForm">
             <div class="row">
                 <div class="form-group">
                     <label for="age">나이 (선택)</label>
-                    <input type="number" id="age" name="age" min="1" max="120" placeholder="예: 30">
+                    <input type="number" id="age" min="1" max="120" placeholder="예: 30">
                 </div>
                 <div class="form-group">
                     <label for="gender">성별 (선택)</label>
-                    <select id="gender" name="gender">
+                    <select id="gender">
                         <option value="">선택 안 함</option>
                         <option value="male">남성</option>
                         <option value="female">여성</option>
@@ -214,7 +178,7 @@
                 <div class="upload-area" id="uploadArea">
                     <span class="emoji">📸</span>
                     <p>클릭하거나 사진을 여기에 드래그하세요</p>
-                    <input type="file" id="imageInput" name="image" accept="image/*" required>
+                    <input type="file" id="imageInput" accept="image/*" required>
                 </div>
                 <img id="preview" alt="미리보기">
             </div>
@@ -222,13 +186,21 @@
             <button type="submit" class="btn" id="submitBtn">수명 예측하기</button>
         </form>
 
-        <div class="error" id="errorBox"></div>
         <div class="result" id="resultBox">
             <div class="result-text" id="resultText"></div>
         </div>
     </div>
 
     <script>
+        const COMMENTS = [
+            ["채소가 풍부해서 혈관 건강에 좋아 보입니다.", "균형 잡힌 식단을 유지하고 있군요!"],
+            ["탄수화물 위주의 식사네요. 단백질도 챙겨보세요.", "채소를 조금 더 추가해보는 건 어떨까요?"],
+            ["단백질이 풍부한 식사입니다. 근육 건강에 좋습니다.", "물을 충분히 마시는 것도 잊지 마세요!"],
+            ["기름진 음식이 보이네요. 가끔은 괜찮지만 자주는 삼가세요.", "운동과 함께라면 더욱 건강한 삶을 살 수 있어요!"],
+            ["전통 한식 식단이군요. 발효 식품이 장 건강에 도움이 됩니다.", "이 식단이라면 장수할 가능성이 높습니다!"],
+            ["과일과 채소가 가득하네요. 비타민 충전 완료!", "이렇게 드시면 피부도 좋아질 거예요!"],
+        ];
+
         const uploadArea = document.getElementById('uploadArea');
         const imageInput = document.getElementById('imageInput');
         const preview = document.getElementById('preview');
@@ -236,7 +208,6 @@
         const submitBtn = document.getElementById('submitBtn');
         const resultBox = document.getElementById('resultBox');
         const resultText = document.getElementById('resultText');
-        const errorBox = document.getElementById('errorBox');
 
         uploadArea.addEventListener('click', () => imageInput.click());
 
@@ -244,9 +215,7 @@
             e.preventDefault();
             uploadArea.classList.add('dragover');
         });
-
         uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.classList.remove('dragover');
@@ -273,36 +242,37 @@
             reader.readAsDataURL(file);
         }
 
-        form.addEventListener('submit', async (e) => {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-            errorBox.style.display = 'none';
-            resultBox.style.display = 'none';
+            if (!imageInput.files[0]) {
+                alert('사진을 업로드해주세요.');
+                return;
+            }
+
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span>AI가 밥상을 분석 중...';
+            submitBtn.innerHTML = '<span class="spinner"></span>분석 중...';
+            resultBox.style.display = 'none';
 
-            const formData = new FormData(form);
+            setTimeout(() => {
+                const age = parseInt(document.getElementById('age').value) || null;
+                const predicted = Math.floor(Math.random() * 41) + 65; // 65~105
+                const [comment, advice] = COMMENTS[Math.floor(Math.random() * COMMENTS.length)];
 
-            try {
-                const res = await fetch('/analyze', { method: 'POST', body: formData });
-                const data = await res.json();
-
-                if (data.error) {
-                    errorBox.textContent = data.error;
-                    errorBox.style.display = 'block';
-                } else {
-                    const html = data.result
-                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-                    resultText.innerHTML = html;
-                    resultBox.style.display = 'block';
-                    resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                let ageMsg = '';
+                if (age && age < predicted) {
+                    ageMsg = ` (앞으로 ${predicted - age}년 더!)`;
                 }
-            } catch {
-                errorBox.textContent = '서버 연결에 실패했습니다. 서버가 실행 중인지 확인해주세요.';
-                errorBox.style.display = 'block';
-            } finally {
+
+                const html =
+                    `당신은 <strong>${predicted}살</strong>까지 살아있을 예정입니다! 🎉${ageMsg}\n\n${comment}\n\n💡 ${advice}`;
+
+                resultText.innerHTML = html;
+                resultBox.style.display = 'block';
+                resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '수명 예측하기';
-            }
+            }, 1500);
         });
     </script>
 </body>

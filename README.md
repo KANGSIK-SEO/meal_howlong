@@ -1,20 +1,12 @@
 # 🍚 밥상 수명예측기
 
-밥상 사진을 올리면 Claude AI가 분석해서 몇 살까지 살 수 있는지 알려주는 서비스입니다.
+밥상 사진을 올리면 몇 살까지 살 수 있는지 알려주는 서비스입니다.
 
-## 실행 방법
+## 사용법
 
-```bash
-pip install -r requirements.txt
-python app.py
-```
+`index.html`을 브라우저에서 열거나, GitHub Pages / Netlify 등 정적 호스팅에 올리면 바로 사용 가능합니다.
 
-브라우저에서 http://localhost:5000 접속 후:
-
-1. Anthropic API 키 입력 (https://console.anthropic.com)
-2. 나이/성별 입력 (선택)
-3. 밥상 사진 업로드
-4. "수명 예측하기" 클릭
+서버 불필요, 설치 불필요.
 
 ## 주의
 
