@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>밥상 수명예측기 🍚</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+            color: #2d3748;
+            background: #f7fafc;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+            color: #2d3748;
+            background: #f7fafc;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .row .form-group { flex: 1; }
+
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f7fafc;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #667eea;
+            background: #ebf4ff;
+        }
+
+        .upload-area .emoji { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+        .upload-area p { color: #718096; font-size: 0.9rem; }
+        .upload-area input[type="file"] { display: none; }
+
+        #preview {
+            display: none;
+            width: 100%;
+            max-height: 240px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: 8px;
+        }
+
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .result {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            background: linear-gradient(135deg, #f6f9ff 0%, #f0f4ff 100%);
+            border-radius: 16px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-text {
+            color: #2d3748;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .result-text strong {
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .error {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #fff5f5;
+            border: 1px solid #fc8181;
+            border-radius: 8px;
+            color: #c53030;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .api-note {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🍚 밥상 수명예측기</h1>
+        <p class="subtitle">오늘 드신 밥상 사진을 올리면<br>몇 살까지 살지 알려드립니다</p>
+
+        <form id="mainForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="api_key">Anthropic API 키</label>
+                <input type="password" id="api_key" name="api_key" placeholder="sk-ant-..." required>
+                <p class="api-note">키는 서버에 저장되지 않으며 분석에만 사용됩니다.</p>
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label for="age">나이 (선택)</label>
+                    <input type="number" id="age" name="age" min="1" max="120" placeholder="예: 30">
+                </div>
+                <div class="form-group">
+                    <label for="gender">성별 (선택)</label>
+                    <select id="gender" name="gender">
+                        <option value="">선택 안 함</option>
+                        <option value="male">남성</option>
+                        <option value="female">여성</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>밥상 사진</label>
+                <div class="upload-area" id="uploadArea">
+                    <span class="emoji">📸</span>
+                    <p>클릭하거나 사진을 여기에 드래그하세요</p>
+                    <input type="file" id="imageInput" name="image" accept="image/*" required>
+                </div>
+                <img id="preview" alt="미리보기">
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">수명 예측하기</button>
+        </form>
+
+        <div class="error" id="errorBox"></div>
+        <div class="result" id="resultBox">
+            <div class="result-text" id="resultText"></div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const preview = document.getElementById('preview');
+        const form = document.getElementById('mainForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultBox = document.getElementById('resultBox');
+        const resultText = document.getElementById('resultText');
+        const errorBox = document.getElementById('errorBox');
+
+        uploadArea.addEventListener('click', () => imageInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                imageInput.files = dt.files;
+                showPreview(file);
+            }
+        });
+
+        imageInput.addEventListener('change', () => {
+            if (imageInput.files[0]) showPreview(imageInput.files[0]);
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                uploadArea.querySelector('p').textContent = file.name;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+            resultBox.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span>AI가 밥상을 분석 중...';
+
+            const formData = new FormData(form);
+
+            try {
+                const res = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                if (data.error) {
+                    errorBox.textContent = data.error;
+                    errorBox.style.display = 'block';
+                } else {
+                    const html = data.result
+                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                    resultText.innerHTML = html;
+                    resultBox.style.display = 'block';
+                    resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } catch {
+                errorBox.textContent = '서버 연결에 실패했습니다. 서버가 실행 중인지 확인해주세요.';
+                errorBox.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '수명 예측하기';
+            }
+        });
+    </script>
+</body>
+</html>
