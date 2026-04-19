@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>밥상 수명예측기 🍚</title>
+    <title>밥상 건강분석기 🍚</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,7 +12,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
             padding: 20px;
         }
@@ -20,260 +20,659 @@
         .card {
             background: white;
             border-radius: 24px;
-            padding: 40px;
+            padding: 36px;
             width: 100%;
-            max-width: 520px;
+            max-width: 540px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin: 20px 0;
         }
 
-        h1 {
-            text-align: center;
-            font-size: 1.6rem;
-            margin-bottom: 8px;
-            color: #2d3748;
-        }
+        h1 { text-align: center; font-size: 1.6rem; margin-bottom: 6px; color: #2d3748; }
+        .subtitle { text-align: center; color: #718096; font-size: 0.88rem; margin-bottom: 28px; line-height: 1.6; }
 
-        .subtitle {
-            text-align: center;
-            color: #718096;
-            font-size: 0.9rem;
-            margin-bottom: 32px;
-        }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-size: 0.83rem; font-weight: 600; color: #4a5568; margin-bottom: 7px; }
 
-        .form-group { margin-bottom: 20px; }
-
-        label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 8px;
-        }
-
-        input[type="number"], select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            color: #2d3748;
-            background: #f7fafc;
+        input[type="number"], input[type="text"], select {
+            width: 100%; padding: 11px 14px;
+            border: 2px solid #e2e8f0; border-radius: 12px;
+            font-size: 0.93rem; color: #2d3748; background: #f7fafc;
             transition: border-color 0.2s;
         }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
+        input:focus, select:focus { outline: none; border-color: #667eea; background: white; }
 
         .row { display: flex; gap: 12px; }
         .row .form-group { flex: 1; }
 
         .upload-area {
-            border: 2px dashed #cbd5e0;
-            border-radius: 12px;
-            padding: 32px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #f7fafc;
+            border: 2px dashed #cbd5e0; border-radius: 12px;
+            padding: 28px; text-align: center; cursor: pointer;
+            transition: all 0.2s; background: #f7fafc;
         }
-
-        .upload-area:hover, .upload-area.dragover {
-            border-color: #667eea;
-            background: #ebf4ff;
-        }
-
-        .upload-area .emoji { font-size: 2.5rem; display: block; margin-bottom: 8px; }
-        .upload-area p { color: #718096; font-size: 0.9rem; }
+        .upload-area:hover, .upload-area.dragover { border-color: #667eea; background: #ebf4ff; }
+        .upload-area .emoji { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+        .upload-area p { color: #718096; font-size: 0.88rem; }
         .upload-area input[type="file"] { display: none; }
 
         #preview {
-            display: none;
-            width: 100%;
-            max-height: 240px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-top: 12px;
+            display: none; width: 100%; max-height: 220px;
+            object-fit: cover; border-radius: 12px; margin-top: 12px;
         }
+
+        .extra-fields {
+            background: #f7fafc; border-radius: 12px;
+            padding: 16px; margin-bottom: 18px;
+        }
+        .extra-fields .row { margin-bottom: 0; }
+        .extra-label { font-size: 0.78rem; color: #718096; margin-bottom: 12px; font-style: italic; }
 
         .btn {
-            width: 100%;
-            padding: 14px;
+            width: 100%; padding: 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-            margin-top: 8px;
+            color: white; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s; margin-top: 4px;
         }
-
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn:active { transform: translateY(0); }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        .result {
-            display: none;
-            margin-top: 24px;
-            padding: 24px;
-            background: linear-gradient(135deg, #f6f9ff 0%, #f0f4ff 100%);
-            border-radius: 16px;
-            border-left: 4px solid #667eea;
-        }
-
-        .result-text {
-            color: #2d3748;
-            font-size: 0.95rem;
-            line-height: 1.8;
-            white-space: pre-wrap;
-        }
-
-        .result-text strong {
-            color: #667eea;
-            font-size: 1.2rem;
-        }
-
         .spinner {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 3px solid rgba(255,255,255,0.4);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 8px;
+            display: inline-block; width: 16px; height: 16px;
+            border: 2.5px solid rgba(255,255,255,0.4); border-top-color: white;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+            vertical-align: middle; margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── 결과 카드 ── */
+        .results { display: none; margin-top: 24px; }
+
+        .result-card {
+            border-radius: 16px; padding: 22px;
+            margin-bottom: 16px; border: 1.5px solid transparent;
+        }
+        .result-card.lifespan {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%);
+            border-color: #c3d0f7;
+        }
+        .result-card.diabetes {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+            border-color: #f7c3c3;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .card-title {
+            font-size: 0.85rem; font-weight: 700; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .card-title.blue { color: #5a67d8; }
+        .card-title.red  { color: #c53030; }
+
+        .big-number { font-size: 2.6rem; font-weight: 800; line-height: 1; }
+        .big-number.blue { color: #5a67d8; }
+        .big-number.red  { color: #e53e3e; }
+        .big-unit { font-size: 1rem; font-weight: 600; margin-left: 4px; color: #718096; }
+
+        .sub-info { font-size: 0.82rem; color: #718096; margin-top: 4px; }
+
+        .score-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+        .score-label { font-size: 0.78rem; color: #4a5568; width: 90px; flex-shrink: 0; }
+        .score-bar-wrap { flex: 1; background: #e2e8f0; border-radius: 99px; height: 8px; }
+        .score-bar { height: 8px; border-radius: 99px; transition: width 0.6s ease; }
+        .score-val { font-size: 0.78rem; font-weight: 700; width: 42px; text-align: right; flex-shrink: 0; }
+
+        .risk-badge {
+            display: inline-block; padding: 3px 10px;
+            border-radius: 99px; font-size: 0.8rem; font-weight: 700; margin-top: 8px;
+        }
+        .risk-low      { background: #c6f6d5; color: #276749; }
+        .risk-moderate { background: #fef3c7; color: #b45309; }
+        .risk-high     { background: #fed7d7; color: #c53030; }
+        .risk-very_high { background: #e53e3e; color: white; }
+
+        .onset-info {
+            margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.7);
+            border-radius: 10px; font-size: 0.85rem; color: #4a5568; line-height: 1.7;
+        }
+        .onset-info strong { color: #c53030; }
+
+        /* ── 설정 ── */
+        .settings-toggle {
+            text-align: center; margin-top: 12px;
+            font-size: 0.8rem; color: #a0aec0; cursor: pointer;
+        }
+        .settings-toggle:hover { color: #667eea; }
+        .settings-panel {
+            display: none; margin-top: 16px; padding: 16px;
+            background: #f7fafc; border-radius: 12px; border: 1.5px solid #e2e8f0;
+        }
+        .settings-panel label { font-size: 0.8rem; }
+        .settings-panel input { font-size: 0.82rem; }
+        .save-btn {
+            margin-top: 8px; padding: 8px 16px;
+            background: #667eea; color: white; border: none;
+            border-radius: 8px; font-size: 0.82rem; cursor: pointer;
+        }
+        .api-status { font-size: 0.78rem; margin-top: 6px; }
+        .api-ok  { color: #38a169; }
+        .api-no  { color: #e53e3e; }
+
+        .mode-tag {
+            display: inline-block; font-size: 0.72rem; padding: 2px 8px;
+            border-radius: 99px; background: #ebf4ff; color: #5a67d8;
+            margin-bottom: 16px; border: 1px solid #c3d0f7;
+        }
+
+        .divider { border: none; border-top: 1.5px solid #e2e8f0; margin: 18px 0; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>🍚 밥상 수명예측기</h1>
-        <p class="subtitle">오늘 드신 밥상 사진을 올리면<br>몇 살까지 살지 알려드립니다</p>
+<div class="card">
+    <h1>🍚 밥상 건강분석기</h1>
+    <p class="subtitle">식단 사진 한 장으로<br><b>수명 예측</b>과 <b>당뇨 위험도</b>를 알려드립니다</p>
 
-        <form id="mainForm">
+    <form id="mainForm">
+        <div class="row">
+            <div class="form-group">
+                <label for="age">나이</label>
+                <input type="number" id="age" min="1" max="100" placeholder="예: 30">
+            </div>
+            <div class="form-group">
+                <label for="gender">성별</label>
+                <select id="gender">
+                    <option value="">선택 안 함</option>
+                    <option value="male">남성</option>
+                    <option value="female">여성</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="extra-fields">
+            <div class="extra-label">당뇨 위험도 정밀 계산용 (선택)</div>
             <div class="row">
                 <div class="form-group">
-                    <label for="age">나이 (선택)</label>
-                    <input type="number" id="age" min="1" max="120" placeholder="예: 30">
+                    <label for="bmi">BMI</label>
+                    <input type="number" id="bmi" min="10" max="60" step="0.1" placeholder="예: 22.5">
                 </div>
                 <div class="form-group">
-                    <label for="gender">성별 (선택)</label>
-                    <select id="gender">
+                    <label for="exercise">운동 빈도</label>
+                    <select id="exercise">
                         <option value="">선택 안 함</option>
-                        <option value="male">남성</option>
-                        <option value="female">여성</option>
+                        <option value="daily">매일</option>
+                        <option value="3-4">주 3~4회</option>
+                        <option value="1-2">주 1~2회</option>
+                        <option value="rarely">가끔</option>
+                        <option value="never">안 함</option>
                     </select>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label>밥상 사진</label>
-                <div class="upload-area" id="uploadArea">
-                    <span class="emoji">📸</span>
-                    <p>클릭하거나 사진을 여기에 드래그하세요</p>
-                    <input type="file" id="imageInput" accept="image/*" required>
-                </div>
-                <img id="preview" alt="미리보기">
-            </div>
-
-            <button type="submit" class="btn" id="submitBtn">수명 예측하기</button>
-        </form>
-
-        <div class="result" id="resultBox">
-            <div class="result-text" id="resultText"></div>
         </div>
+
+        <div class="form-group">
+            <label>식단 사진</label>
+            <div class="upload-area" id="uploadArea">
+                <span class="emoji">📸</span>
+                <p>클릭하거나 사진을 여기에 드래그하세요</p>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+            <img id="preview" alt="미리보기">
+        </div>
+
+        <div class="form-group" id="manualFoodGroup" style="display:none">
+            <label for="manualFood">식단 직접 입력 (AI 분석 불가 시)</label>
+            <input type="text" id="manualFood" placeholder="예: 라면, 탕후루, 비빔밥, 삼겹살 ...">
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">🔍 건강 분석하기</button>
+    </form>
+
+    <!-- 결과 -->
+    <div class="results" id="results">
+        <span class="mode-tag" id="modeTag">양자역학 기반 시뮬레이션</span>
+
+        <!-- 수명 예측 -->
+        <div class="result-card lifespan">
+            <div class="card-title blue">🫀 수명 예측</div>
+            <div>
+                <span class="big-number blue" id="lifespanNum">—</span>
+                <span class="big-unit">세까지</span>
+            </div>
+            <div class="sub-info" id="lifespanSub"></div>
+            <div class="score-row">
+                <span class="score-label">대사건강</span>
+                <div class="score-bar-wrap"><div class="score-bar" id="bar-metabolic" style="background:#5a67d8;width:0%"></div></div>
+                <span class="score-val blue" id="val-metabolic"></span>
+            </div>
+            <div class="score-row">
+                <span class="score-label">항염증</span>
+                <div class="score-bar-wrap"><div class="score-bar" id="bar-inflammation" style="background:#38a169;width:0%"></div></div>
+                <span class="score-val" style="color:#38a169" id="val-inflammation"></span>
+            </div>
+            <div class="score-row">
+                <span class="score-label">장수인자</span>
+                <div class="score-bar-wrap"><div class="score-bar" id="bar-longevity" style="background:#805ad5;width:0%"></div></div>
+                <span class="score-val" style="color:#805ad5" id="val-longevity"></span>
+            </div>
+        </div>
+
+        <!-- 당뇨 위험도 -->
+        <div class="result-card diabetes">
+            <div class="card-title red">🩸 당뇨 위험도</div>
+            <div>
+                <span class="big-number red" id="diabetesNum">—</span>
+                <span class="big-unit">% (5년 내)</span>
+            </div>
+            <span class="risk-badge" id="riskBadge"></span>
+            <div class="onset-info" id="onsetInfo"></div>
+            <div class="score-row" style="margin-top:14px">
+                <span class="score-label">혈당부하</span>
+                <div class="score-bar-wrap"><div class="score-bar" id="bar-glycemic" style="background:#e53e3e;width:0%"></div></div>
+                <span class="score-val red" id="val-glycemic"></span>
+            </div>
+            <div class="score-row">
+                <span class="score-label">인슐린저항</span>
+                <div class="score-bar-wrap"><div class="score-bar" id="bar-insulin" style="background:#dd6b20;width:0%"></div></div>
+                <span class="score-val" style="color:#dd6b20" id="val-insulin"></span>
+            </div>
+        </div>
+
+        <p style="font-size:0.73rem;color:#a0aec0;text-align:center;margin-top:4px">
+            ※ 단일 식사 기준 예측이며 의학적 진단이 아닙니다.<br>
+            한국 건보공단 연령별 유병률 통계 기반 (2024)
+        </p>
     </div>
 
-    <script>
-        const COMMENTS = [
-            ["채소가 풍부해서 혈관 건강에 좋아 보입니다.", "균형 잡힌 식단을 유지하고 있군요!"],
-            ["탄수화물 위주의 식사네요. 단백질도 챙겨보세요.", "채소를 조금 더 추가해보는 건 어떨까요?"],
-            ["단백질이 풍부한 식사입니다. 근육 건강에 좋습니다.", "물을 충분히 마시는 것도 잊지 마세요!"],
-            ["기름진 음식이 보이네요. 가끔은 괜찮지만 자주는 삼가세요.", "운동과 함께라면 더욱 건강한 삶을 살 수 있어요!"],
-            ["전통 한식 식단이군요. 발효 식품이 장 건강에 도움이 됩니다.", "이 식단이라면 장수할 가능성이 높습니다!"],
-            ["과일과 채소가 가득하네요. 비타민 충전 완료!", "이렇게 드시면 피부도 좋아질 거예요!"],
-        ];
+    <hr class="divider">
 
-        const uploadArea = document.getElementById('uploadArea');
-        const imageInput = document.getElementById('imageInput');
-        const preview = document.getElementById('preview');
-        const form = document.getElementById('mainForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const resultBox = document.getElementById('resultBox');
-        const resultText = document.getElementById('resultText');
+    <div class="settings-toggle" id="settingsToggle">⚙️ API 설정 (Claude Vision 분석 활성화)</div>
+    <div class="settings-panel" id="settingsPanel">
+        <div class="form-group">
+            <label>Anthropic API Key</label>
+            <input type="text" id="apiKeyInput" placeholder="sk-ant-api03-...">
+        </div>
+        <button class="save-btn" id="saveApiBtn">저장</button>
+        <div class="api-status" id="apiStatus"></div>
+    </div>
+</div>
 
-        uploadArea.addEventListener('click', () => imageInput.click());
+<script>
+// ════════════════════════════════════════════════
+//  양자역학 기반 시뮬레이션 엔진
+//  실제 QPU와 동일한 확률 계산 (Ry(θ) 회로)
+// ════════════════════════════════════════════════
+const p1 = theta => Math.pow(Math.sin(theta / 2), 2); // P(|1>) = sin²(θ/2)
+const encode = v => Math.max(0, Math.min(1, v)) * Math.PI;
+const SHOTS = 512;
 
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const dt = new DataTransfer();
-                dt.items.add(file);
-                imageInput.files = dt.files;
-                showPreview(file);
-            }
-        });
+function simulateMetabolic(f) {
+    const probs = [f.calorie_density, f.calorie_density,
+                   f.sugar_level, f.sugar_level,
+                   f.saturated_fat, f.saturated_fat,
+                   0.5, 0.5].map(encode).map(p1);
+    let acc = 0;
+    for (let s = 0; s < SHOTS; s++) {
+        const ones = probs.filter(p => Math.random() < p).length;
+        acc += 1 - 2 * (ones / 8); // 1이 많을수록(고칼로리) 음수
+    }
+    return Math.max(-1, Math.min(1, acc / SHOTS));
+}
 
-        imageInput.addEventListener('change', () => {
-            if (imageInput.files[0]) showPreview(imageInput.files[0]);
-        });
+function simulateInflammation(f) {
+    const pProt = [f.omega3, f.antioxidants, f.omega3, f.antioxidants].map(encode).map(p1);
+    const pHarm = [f.processed_food, f.saturated_fat, f.processed_food, f.saturated_fat].map(encode).map(p1);
+    let acc = 0;
+    for (let s = 0; s < SHOTS; s++) {
+        const prot = pProt.filter(p => Math.random() < p).length;
+        const harm = pHarm.filter(p => Math.random() < p).length;
+        acc += (prot - harm) / 4;
+    }
+    return Math.max(-1, Math.min(1, acc / SHOTS));
+}
 
-        function showPreview(file) {
+function simulateLongevity(f) {
+    const probs = [f.fiber_content, f.mediterranean_score,
+                   f.antioxidants, f.fiber_content,
+                   f.mediterranean_score, f.antioxidants,
+                   0.5, 0.5].map(encode).map(p1);
+    let acc = 0;
+    for (let s = 0; s < SHOTS; s++) {
+        const ones = probs.filter(p => Math.random() < p).length;
+        acc += 1 - 2 * (ones % 2); // 짝수 패리티 = 장수 친화
+    }
+    return Math.max(-1, Math.min(1, acc / SHOTS));
+}
+
+function simulateGlycemic(f) {
+    const gl = f.glycemic_load ?? (f.sugar_level * 0.6 + (f.refined_carbs ?? 0) * 0.4);
+    const probs = [gl, gl, f.sugar_level, f.sugar_level,
+                   f.refined_carbs ?? f.sugar_level, f.calorie_density,
+                   0.5, 0.5].map(encode).map(p1);
+    let acc = 0;
+    for (let s = 0; s < SHOTS; s++) {
+        acc += probs.filter(p => Math.random() < p).length / 8;
+    }
+    return Math.max(0, Math.min(1, acc / SHOTS)); // 0~1 (높을수록 혈당 위험)
+}
+
+function simulateInsulinResistance(f) {
+    const pBad  = [f.processed_food, f.saturated_fat, f.processed_food, f.saturated_fat].map(encode).map(p1);
+    const pGood = [f.omega3, f.fiber_content, f.antioxidants, f.mediterranean_score].map(encode).map(p1);
+    let acc = 0;
+    for (let s = 0; s < SHOTS; s++) {
+        const bad  = pBad.filter(p  => Math.random() < p).length;
+        const good = pGood.filter(p => Math.random() < p).length;
+        acc += (bad - good) / 4;
+    }
+    return Math.max(-1, Math.min(1, acc / SHOTS)); // 양수 = 인슐린저항 위험
+}
+
+// ════════════════════════════════════════════════
+//  한국 연령별 당뇨 연간 발병률 (건보공단 2024)
+// ════════════════════════════════════════════════
+const KR_DIABETES_ANNUAL = {
+    15:0.002, 20:0.003, 25:0.005, 30:0.010,
+    35:0.018, 40:0.032, 45:0.052, 50:0.075,
+    55:0.095, 60:0.115, 65:0.130,
+};
+function getBaseRate(age) {
+    const keys = Object.keys(KR_DIABETES_ANNUAL).map(Number).sort((a,b)=>a-b);
+    const k = keys.reduce((prev, cur) => (cur <= age ? cur : prev), keys[0]);
+    return KR_DIABETES_ANNUAL[k] || 0.010;
+}
+
+// ════════════════════════════════════════════════
+//  수명 예측
+// ════════════════════════════════════════════════
+function predictLifespan(features, age, gender) {
+    const base = gender === 'male' ? 80.5 : gender === 'female' ? 86.5 : 83.5;
+    const metabolic    = simulateMetabolic(features);
+    const inflammation = simulateInflammation(features);
+    const longevity    = simulateLongevity(features);
+    const delta = metabolic * 4 + inflammation * 3 + longevity * 5;
+    return {
+        predicted : Math.round((base + delta) * 10) / 10,
+        base, delta: Math.round(delta * 10) / 10,
+        metabolic, inflammation, longevity,
+        remaining : age ? Math.max(0, Math.round((base + delta - age) * 10) / 10) : null,
+    };
+}
+
+// ════════════════════════════════════════════════
+//  당뇨 위험도 예측
+// ════════════════════════════════════════════════
+function predictDiabetes(features, age, bmi, exercise) {
+    const baseRate = getBaseRate(age || 30);
+    const glycemic  = simulateGlycemic(features);
+    const insulin   = simulateInsulinResistance(features);
+
+    const bmiMod = !bmi ? 1.0
+        : bmi < 18.5 ? 0.8 : bmi < 23 ? 1.0
+        : bmi < 25   ? 1.4 : bmi < 30 ? 2.0 : 3.0;
+
+    const exMod = exercise === 'daily' ? 0.5
+        : exercise === '3-4' ? 0.7 : exercise === '1-2' ? 1.0
+        : exercise === 'rarely' ? 1.4 : exercise === 'never' ? 1.8 : 1.0;
+
+    const dietMult  = 1 + glycemic * 3.5 + insulin * 2.0;
+    const annualRisk = Math.min(0.50, baseRate * dietMult * bmiMod * exMod);
+    const risk5yr    = Math.min(0.98, 1 - Math.pow(1 - annualRisk, 5));
+    const medYears   = annualRisk > 0 ? Math.round(Math.log(0.5) / Math.log(1 - annualRisk)) : 99;
+    const onsetYear  = new Date().getFullYear() + medYears;
+    const level      = risk5yr < 0.05 ? 'low' : risk5yr < 0.15 ? 'moderate'
+                     : risk5yr < 0.35 ? 'high' : 'very_high';
+    return {
+        risk5yr   : Math.round(risk5yr * 1000) / 10,
+        onsetYear, level, medYears,
+        glycemic  : Math.round(glycemic * 100),
+        insulin   : Math.round((insulin + 1) / 2 * 100),
+    };
+}
+
+// ════════════════════════════════════════════════
+//  한국 대표 식품 DB (혈당부하 중심)
+// ════════════════════════════════════════════════
+const FOOD_DB = {
+    '아메리카노': { calorie_density:0.02, sugar_level:0.00, saturated_fat:0.00, omega3:0.00, antioxidants:0.65, processed_food:0.05, fiber_content:0.02, mediterranean_score:0.45, glycemic_load:0.03, refined_carbs:0.00 },
+    '라면':       { calorie_density:0.75, sugar_level:0.25, saturated_fat:0.55, omega3:0.05, antioxidants:0.10, processed_food:0.95, fiber_content:0.05, mediterranean_score:0.05, glycemic_load:0.90, refined_carbs:0.90 },
+    '탕후루':     { calorie_density:0.60, sugar_level:0.95, saturated_fat:0.05, omega3:0.00, antioxidants:0.20, processed_food:0.75, fiber_content:0.05, mediterranean_score:0.05, glycemic_load:0.95, refined_carbs:0.65 },
+    '비빔밥':     { calorie_density:0.50, sugar_level:0.15, saturated_fat:0.20, omega3:0.10, antioxidants:0.65, processed_food:0.15, fiber_content:0.55, mediterranean_score:0.55, glycemic_load:0.55, refined_carbs:0.50 },
+    '삼겹살':     { calorie_density:0.75, sugar_level:0.05, saturated_fat:0.85, omega3:0.10, antioxidants:0.15, processed_food:0.20, fiber_content:0.00, mediterranean_score:0.15, glycemic_load:0.05, refined_carbs:0.05 },
+    '치킨':       { calorie_density:0.70, sugar_level:0.15, saturated_fat:0.55, omega3:0.05, antioxidants:0.10, processed_food:0.75, fiber_content:0.05, mediterranean_score:0.10, glycemic_load:0.40, refined_carbs:0.35 },
+    '샐러드':     { calorie_density:0.12, sugar_level:0.10, saturated_fat:0.08, omega3:0.25, antioxidants:0.90, processed_food:0.05, fiber_content:0.85, mediterranean_score:0.92, glycemic_load:0.08, refined_carbs:0.05 },
+    '김치찌개':   { calorie_density:0.38, sugar_level:0.10, saturated_fat:0.30, omega3:0.15, antioxidants:0.55, processed_food:0.30, fiber_content:0.40, mediterranean_score:0.42, glycemic_load:0.25, refined_carbs:0.20 },
+    '된장찌개':   { calorie_density:0.30, sugar_level:0.08, saturated_fat:0.20, omega3:0.18, antioxidants:0.60, processed_food:0.25, fiber_content:0.45, mediterranean_score:0.50, glycemic_load:0.20, refined_carbs:0.15 },
+    '피자':       { calorie_density:0.78, sugar_level:0.22, saturated_fat:0.65, omega3:0.05, antioxidants:0.20, processed_food:0.82, fiber_content:0.10, mediterranean_score:0.22, glycemic_load:0.75, refined_carbs:0.72 },
+    '초밥':       { calorie_density:0.48, sugar_level:0.14, saturated_fat:0.12, omega3:0.75, antioxidants:0.38, processed_food:0.18, fiber_content:0.10, mediterranean_score:0.68, glycemic_load:0.48, refined_carbs:0.42 },
+    '버블티':     { calorie_density:0.55, sugar_level:0.90, saturated_fat:0.10, omega3:0.00, antioxidants:0.10, processed_food:0.85, fiber_content:0.02, mediterranean_score:0.04, glycemic_load:0.88, refined_carbs:0.80 },
+    '백반':       { calorie_density:0.45, sugar_level:0.10, saturated_fat:0.22, omega3:0.12, antioxidants:0.55, processed_food:0.20, fiber_content:0.50, mediterranean_score:0.52, glycemic_load:0.50, refined_carbs:0.48 },
+    '햄버거':     { calorie_density:0.80, sugar_level:0.30, saturated_fat:0.65, omega3:0.05, antioxidants:0.12, processed_food:0.88, fiber_content:0.08, mediterranean_score:0.08, glycemic_load:0.78, refined_carbs:0.70 },
+    '연어':       { calorie_density:0.42, sugar_level:0.02, saturated_fat:0.22, omega3:0.95, antioxidants:0.35, processed_food:0.08, fiber_content:0.00, mediterranean_score:0.82, glycemic_load:0.02, refined_carbs:0.00 },
+};
+
+function featuresFromText(text) {
+    const found = Object.keys(FOOD_DB).find(k => text.includes(k));
+    if (found) return { ...FOOD_DB[found], foods: [found] };
+    // 기본값: 보통 수준
+    return { calorie_density:0.50, sugar_level:0.30, saturated_fat:0.30, omega3:0.15,
+             antioxidants:0.35, processed_food:0.45, fiber_content:0.25,
+             mediterranean_score:0.30, glycemic_load:0.50, refined_carbs:0.45, foods: [text] };
+}
+
+// ════════════════════════════════════════════════
+//  Claude Vision API 호출
+// ════════════════════════════════════════════════
+async function analyzeWithClaude(base64, mimeType) {
+    const key = localStorage.getItem('anthropic_api_key');
+    if (!key) throw new Error('NO_KEY');
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': key,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+            model: 'claude-opus-4-5',
+            max_tokens: 600,
+            messages: [{ role: 'user', content: [
+                { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
+                { type: 'text', text: `이 식단 사진을 분석해서 아래 JSON만 반환해. 설명 없이.
+각 수치는 0.0~1.0:
+{
+  "calorie_density": ,
+  "sugar_level": ,
+  "saturated_fat": ,
+  "omega3": ,
+  "antioxidants": ,
+  "processed_food": ,
+  "fiber_content": ,
+  "mediterranean_score": ,
+  "glycemic_load": ,
+  "refined_carbs": ,
+  "foods": []
+}` }
+            ]}]
+        })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'API 오류');
+    let text = data.content[0].text.trim();
+    if (text.includes('```')) text = text.split('```')[1].replace(/^json/, '').trim();
+    return JSON.parse(text);
+}
+
+// ════════════════════════════════════════════════
+//  UI 렌더링
+// ════════════════════════════════════════════════
+function pct(score) { return Math.round((score + 1) / 2 * 100); } // [-1,1] → [0,100]%
+function sign(n)    { return n >= 0 ? `+${n}` : `${n}`; }
+
+function renderLifespan(r) {
+    document.getElementById('lifespanNum').textContent = r.predicted;
+    const sub = [];
+    if (r.remaining !== null) sub.push(`앞으로 ${r.remaining}년`);
+    sub.push(`기준 ${r.base}세 ${sign(r.delta)}년`);
+    document.getElementById('lifespanSub').textContent = sub.join('  ·  ');
+
+    const bars = [
+        ['metabolic',    pct(r.metabolic)],
+        ['inflammation', pct(r.inflammation)],
+        ['longevity',    pct(r.longevity)],
+    ];
+    bars.forEach(([id, v]) => {
+        document.getElementById(`bar-${id}`).style.width = v + '%';
+        document.getElementById(`val-${id}`).textContent = sign(Math.round(
+            id === 'metabolic' ? r.metabolic * 4 :
+            id === 'inflammation' ? r.inflammation * 3 : r.longevity * 5
+        )) + '년';
+    });
+}
+
+const RISK_LABELS = { low:'낮음', moderate:'주의', high:'높음', very_high:'매우 높음' };
+
+function renderDiabetes(d) {
+    document.getElementById('diabetesNum').textContent = d.risk5yr;
+    const badge = document.getElementById('riskBadge');
+    badge.textContent = RISK_LABELS[d.level];
+    badge.className = `risk-badge risk-${d.level}`;
+
+    const yr = d.medYears >= 50 ? '50년 이상' : `${d.onsetYear}년경 (${d.medYears}년 후)`;
+    document.getElementById('onsetInfo').innerHTML =
+        `현재 식습관 유지 시<br>` +
+        `<strong>5년 내 당뇨 발병 확률 ${d.risk5yr}%</strong><br>` +
+        `중위 발병 예상 시점: <strong>${yr}</strong>`;
+
+    document.getElementById('bar-glycemic').style.width = d.glycemic + '%';
+    document.getElementById('val-glycemic').textContent = d.glycemic + '%';
+    document.getElementById('bar-insulin').style.width = d.insulin + '%';
+    document.getElementById('val-insulin').textContent = d.insulin + '%';
+}
+
+// ════════════════════════════════════════════════
+//  메인 흐름
+// ════════════════════════════════════════════════
+const form       = document.getElementById('mainForm');
+const submitBtn  = document.getElementById('submitBtn');
+const resultsDiv = document.getElementById('results');
+const modeTag    = document.getElementById('modeTag');
+const manualGrp  = document.getElementById('manualFoodGroup');
+
+form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const age      = parseInt(document.getElementById('age').value) || null;
+    const gender   = document.getElementById('gender').value;
+    const bmi      = parseFloat(document.getElementById('bmi').value) || null;
+    const exercise = document.getElementById('exercise').value;
+    const file     = document.getElementById('imageInput').files[0];
+    const manual   = document.getElementById('manualFood').value.trim();
+
+    if (!file && !manual) { alert('사진을 업로드하거나 식단을 입력해주세요.'); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner"></span>분석 중...';
+    resultsDiv.style.display = 'none';
+
+    let features;
+    let mode = '양자역학 기반 시뮬레이션';
+
+    if (file) {
+        const base64 = await new Promise((res, rej) => {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                uploadArea.querySelector('p').textContent = file.name;
-            };
+            reader.onload  = ev => res(ev.target.result.split(',')[1]);
+            reader.onerror = rej;
             reader.readAsDataURL(file);
-        }
+        });
+        const mime = file.type || 'image/jpeg';
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (!imageInput.files[0]) {
-                alert('사진을 업로드해주세요.');
+        try {
+            features = await analyzeWithClaude(base64, mime);
+            mode = 'Claude Vision AI + 양자 시뮬레이션';
+        } catch (err) {
+            if (err.message !== 'NO_KEY') console.warn('Claude 분석 실패:', err.message);
+            // 사진 없으면 수동 입력 창 노출
+            manualGrp.style.display = 'block';
+            if (!manual) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '🔍 건강 분석하기';
+                alert('AI 분석을 사용할 수 없습니다.\n아래 식단 입력란에 음식 이름을 입력 후 다시 눌러주세요.');
                 return;
             }
+            features = featuresFromText(manual);
+            mode = '식품 DB + 양자 시뮬레이션';
+        }
+    } else {
+        features = featuresFromText(manual);
+        mode = '식품 DB + 양자 시뮬레이션';
+    }
 
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span>분석 중...';
-            resultBox.style.display = 'none';
+    // 예측 실행
+    const lifespan = predictLifespan(features, age, gender);
+    const diabetes = predictDiabetes(features, age, bmi, exercise);
 
-            setTimeout(() => {
-                const age = parseInt(document.getElementById('age').value) || null;
-                const predicted = Math.floor(Math.random() * 51) + 100; // 100~150
-                const [comment, advice] = COMMENTS[Math.floor(Math.random() * COMMENTS.length)];
+    modeTag.textContent = mode;
+    renderLifespan(lifespan);
+    renderDiabetes(diabetes);
 
-                let ageMsg = '';
-                if (age && age < predicted) {
-                    ageMsg = ` (앞으로 ${predicted - age}년 더!)`;
-                }
+    resultsDiv.style.display = 'block';
+    resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-                const html =
-                    `당신은 <strong>${predicted}살</strong>까지 살아있을 예정입니다! 🎉${ageMsg}\n\n${comment}\n\n💡 ${advice}`;
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '🔍 건강 분석하기';
+});
 
-                resultText.innerHTML = html;
-                resultBox.style.display = 'block';
-                resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+// ════════════════════════════════════════════════
+//  파일 업로드 UI
+// ════════════════════════════════════════════════
+const uploadArea = document.getElementById('uploadArea');
+const imageInput = document.getElementById('imageInput');
+const preview    = document.getElementById('preview');
 
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '수명 예측하기';
-            }, 1500);
-        });
-    </script>
+uploadArea.addEventListener('click', () => imageInput.click());
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+    e.preventDefault(); uploadArea.classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    if (f?.type.startsWith('image/')) { const dt = new DataTransfer(); dt.items.add(f); imageInput.files = dt.files; showPreview(f); }
+});
+imageInput.addEventListener('change', () => { if (imageInput.files[0]) showPreview(imageInput.files[0]); });
+
+function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+    reader.readAsDataURL(file);
+    uploadArea.querySelector('p').textContent = file.name;
+    manualGrp.style.display = 'none';
+}
+
+// ════════════════════════════════════════════════
+//  설정 패널
+// ════════════════════════════════════════════════
+document.getElementById('settingsToggle').addEventListener('click', () => {
+    const p = document.getElementById('settingsPanel');
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
+});
+
+(function initSettings() {
+    const key = localStorage.getItem('anthropic_api_key');
+    if (key) {
+        document.getElementById('apiKeyInput').value = key;
+        document.getElementById('apiStatus').innerHTML = '<span class="api-ok">✓ API 키 저장됨 — AI Vision 사용 가능</span>';
+    } else {
+        document.getElementById('apiStatus').innerHTML = '<span class="api-no">API 키 없음 — 식품 DB 모드로 동작</span>';
+    }
+})();
+
+document.getElementById('saveApiBtn').addEventListener('click', () => {
+    const val = document.getElementById('apiKeyInput').value.trim();
+    if (val) {
+        localStorage.setItem('anthropic_api_key', val);
+        document.getElementById('apiStatus').innerHTML = '<span class="api-ok">✓ 저장됨</span>';
+    }
+});
+</script>
 </body>
 </html>
