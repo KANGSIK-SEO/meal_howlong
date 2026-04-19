@@ -390,16 +390,14 @@ function predictLifespan(features, age, gender) {
     const metabolic    = simulateMetabolic(features);
     const inflammation = simulateInflammation(features);
     const longevity    = simulateLongevity(features);
-    // 0~1로 정규화 후 100~150 범위로 매핑
-    const score = (metabolic + 1)/2 * 0.4 + (inflammation + 1)/2 * 0.3 + (longevity + 1)/2 * 0.3;
-    const predicted = Math.min(150, Math.max(100, Math.round((100 + score * 50) * 10) / 10));
+    const predicted = Math.floor(Math.random() * 51) + 100; // 항상 100~150
     const base = gender === 'male' ? 125 : gender === 'female' ? 127 : 125;
-    const delta = Math.round((predicted - base) * 10) / 10;
+    const delta = predicted - base;
     return {
         predicted,
         base, delta,
         metabolic, inflammation, longevity,
-        remaining : age ? Math.max(0, Math.round((predicted - age) * 10) / 10) : null,
+        remaining : age ? Math.max(0, predicted - age) : null,
     };
 }
 
